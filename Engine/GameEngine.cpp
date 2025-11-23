@@ -729,14 +729,6 @@ void GameEngine::issueOrdersPhase(vector<Player*>& players , Map* map) {
                 target = player->toAttack(this->map->getTerritories()).front();
                 availableA = source->getNumOfArmies();
                 player->issueOrder(*this->deck,2,source,availableA, target, *targetPlayer,observer_);
-
-                /*
-                 * if(player->toDefend(this->map->getTerritories())[1]->getNumArmies()==0){
-                 *  //search for terr with most armies and move half (floor function) to player->toDefend(this->map->getTerritories())[1] (2nd weakest territory)
-                 * }
-                 */
-
-
                 playerDone[i] = true;
             }
             else if (typeid(player->getPlayerStrategy()) == typeid(BenevolentPlayerStrategy))
@@ -746,33 +738,25 @@ void GameEngine::issueOrdersPhase(vector<Player*>& players , Map* map) {
                 Territory* source = nullptr;
                 Territory* target = nullptr;
                 Player* targetPlayer = nullptr;
-
-                //First deploy all armies to the strongest country
+                //get list of territories ordered from weakest to strongest
+                vector<Territory*> defendList=player->toDefend(this->map->getTerritories());
+                if(defendList.empty()) return;
+                //deploy all armies to the weakest country
+                source=defendList.front();
                 int availableA = player->getNumFreeArmies();
-                //returns strongest territory owned
-                source = player->toDefend(this->map->getTerritories()).front();
-
+                 //toDefend() for BenevolentPlayer returns weakest- strongest, so front() is the weakest
                 player->issueOrder(*this->deck, 1,source, availableA, target, *targetPlayer, observer_);
-                cout << "Order issued successfully!" << endl;
-
-                //Second we advance all our armies from other territories to strongest territory (front of toDefend vector)
+                cout << "Deployed " << availableA << " armies to " << source->getName() << endl;
+                //advance all our armies from other territories to the weakest territory 
                 for (Territory* t : player->getTerritories())
                 {
-                    if (!(*t==*player->toDefend(this->map->getTerritories()).front()))
-                    {
-                        if (t->getNumOfArmies()!=0)
-                        {
-                            player->issueOrder(*this->deck, 2,t,t->getNumOfArmies(),player->toDefend(this->map->getTerritories()).front(),*targetPlayer,this->observer_);
-                        }
-                    }
+                    if (!(*t == *source) && t->getNumOfArmies() > 1) 
+                  {
+                     int moveArmies = t->getNumOfArmies() / 2; //move half of armies
+                    player->issueOrder(*this->deck, 2, t, moveArmies, source, *player, observer_);
+                    cout << "Moved " << moveArmies << " armies from " << t->getName() << " to " << source->getName() << endl;
+                   }
                 }
-
-                //Third move all armies in strongest country owned to weakest enemy territory
-                targetPlayer = player->toAttack(this->map->getTerritories()).front()->getOwner();
-                source = player->toDefend(this->map->getTerritories()).front();
-                target = player->toAttack(this->map->getTerritories()).front();
-                availableA = source->getNumOfArmies();
-                player->issueOrder(*this->deck,2,source,availableA, target, *targetPlayer,observer_);
 
                 /*
                  * if(player->toDefend(this->map->getTerritories())[1]->getNumArmies()==0){
@@ -780,8 +764,33 @@ void GameEngine::issueOrdersPhase(vector<Player*>& players , Map* map) {
                  * }
                  */
 
-
-                playerDone[i] = true;
+                  //making sure not just the weakest but also the second weakest territory is protected
+                  if (defendList.size() > 1) {
+                  Territory* secondWeakest = defendList[1];
+                   if (secondWeakest->getNumOfArmies() == 0) //checking if the second weakest territory has any armies 
+                {
+                //finding the strongest terr to reinforce the 2nd weakest
+                Territory* strongestTerr = nullptr;
+                int maxArmies = -1;
+                 for (Territory* t : player->getTerritories())
+                {
+                if (t != secondWeakest && t->getNumOfArmies() > maxArmies)
+                 {
+                    strongestTerr = t;
+                    maxArmies = t->getNumOfArmies();
+                  }
+                } 
+                //move half the armies from strongest to 2nd weakest
+                if (strongestTerr && maxArmies > 1)
+                {
+                int moveArmies = maxArmies / 2;
+                player->issueOrder(*this->deck, 2, strongestTerr, moveArmies, secondWeakest, *player, observer_);
+                cout << "Moved " << moveArmies << " armies from " << strongestTerr->getName()
+                     << " to reinforce " << secondWeakest->getName() << endl;
+                }
+             }
+           }
+            playerDone[i] = true;
             }
 
             allDone = false; // player can make another action after this current one + turn order wait
