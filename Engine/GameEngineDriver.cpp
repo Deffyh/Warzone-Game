@@ -7,6 +7,18 @@
 using namespace std;
 
  //Free function required by the assignment
+
+void testTournament() {
+    cout << "===== GAME ENGINE STATE MACHINE TEST =====" << endl;
+
+    LogObserver* observer = new LogObserver();
+    GameEngine engine(observer);   // create a new engine instance
+    engine.startupPhase();        // start the game loop
+
+    delete observer;
+    cout << "===== GAME ENDED =====" << endl;
+}
+
 void testGameStates() {
     cout << "===== GAME ENGINE STATE MACHINE TEST =====" << endl;
 
