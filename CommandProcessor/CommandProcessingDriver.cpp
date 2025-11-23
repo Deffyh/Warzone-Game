@@ -73,7 +73,7 @@ void testCommandProcessor(){
    
     delete log3;
 }
-
+/**
 int main(){
     LogObserver* log= new LogObserver();
     CommandProcessor cmdpc(log);
@@ -111,3 +111,4 @@ int main(){
 
     return 0;
 }
+*/
