@@ -602,7 +602,9 @@ void GameEngine::mainGameLoop() {
             //add flag to draw one card if a territory was conquered
             for (Player* player : players) {
                 if (player->getEarnedCard()) {
+                    cout << endl;
                     player->addCard(deck->draw());
+                    player->setEarnedCard(false);
                 }
             }
 
