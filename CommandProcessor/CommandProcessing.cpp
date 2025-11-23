@@ -1,10 +1,13 @@
 #include "CommandProcessing.h"
+#include "../Engine/GameEngine.h"
 #include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
+#include <filesystem>
 using namespace std;
 
+GameEngine* CommandProcessor::engine = nullptr;   // ← REQUIRED
 
 /*command class implemetation, the command class represents a command entered by the player
 each command has a name and an effect */
@@ -44,6 +47,8 @@ Command& Command::operator=(const Command& other){
 }
 //storing the given string into effect attribute
 void Command:: saveEffect(){
+    size_t firstSpacePos = command.find(' ');
+    std::string firstWord = command.substr(0, firstSpacePos);
 
     if (command == "exit"||command=="quit")//quick exit
     {
@@ -85,6 +90,9 @@ void Command:: saveEffect(){
     {
         effect = "replaying game";
     }
+    else if (firstWord == "tournament"){
+        effect = "Attempting tournament";
+    }
     else
     {
         effect = "invalid command";
@@ -95,6 +103,9 @@ void Command:: saveEffect(){
 //returns the command string
 string Command::getCommand()const{
     return command;
+}
+void Command::setCommand(string cmd){
+    this->command = cmd;
 }
 
 //returns the effect string
@@ -214,6 +225,8 @@ bool CommandProcessor:: validate(Command* cm, string state){
 
     bool valid=false;
     string command = cm->getCommand();
+    size_t firstSpacePos = command.find(' ');
+    std::string firstWord = command.substr(0, firstSpacePos);
 
     if (command == "exit") { //quick exit
         valid=true;
@@ -236,6 +249,12 @@ bool CommandProcessor:: validate(Command* cm, string state){
     else if ((command == "replay" || command == "quit") && state == "win") {
             valid=true;
     }
+    else if (firstWord == "tournament" && state == "start"){
+        size_t firstDashPos = command.find('-');
+        valid = validateTournamentParameters(command);
+
+        if (valid) cm->setCommand("tournament");
+    }
     else {
         cout << "Invalid command for current state: " << state << endl;
     }
@@ -243,6 +262,277 @@ bool CommandProcessor:: validate(Command* cm, string state){
     return valid;
 
 
+}
+
+bool CommandProcessor::validateTournamentParameters(const string& cmd){
+    int numParameters = 4;
+    bool hasMaps = false;
+    bool hasStrategies = false;
+    bool hasNumGames = false;
+    bool hasNumTurns = false;
+    size_t nextDashPos = cmd.find('-');
+    size_t nextLessThanPos = std::string::npos;
+    size_t nextGreaterThanPos = std::string::npos;
+    size_t nextSpacePos = std::string::npos;
+    size_t secondNextSpacePos = std::string::npos;
+    string parameters;
+    string pathToMapFiles = "part1-map/mapFiles";
+    std::vector<std::string> AvailableMapFiles;
+    std::vector<std::string> AvailableStrategies = {"Aggressive", "Benevolent", "Neutral", "Cheater"};
+    std::vector<std::string> MapsToUse;
+    std::vector<std::string> StrategiesToUse;
+    int numGames;
+    int numTurns;
+
+    for (const auto& entry : std::filesystem::directory_iterator(pathToMapFiles)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".map") {
+            AvailableMapFiles.push_back(entry.path().filename().string());
+        }
+    }
+
+    // Go over our command to endure the necessary number of parametes and make sure they are valid
+    for (int paramNumber = 0; paramNumber < numParameters + 1; paramNumber++){
+        // See if we can find another parameter having finding the necessary number of parameters
+        if (paramNumber == numParameters && nextDashPos != std::string::npos){
+            cout << "Too many parameters have been passes" << endl;
+            printTournmanetHelpCmd();
+            return false;
+        }
+        else if (paramNumber == numParameters)
+            break;
+
+        if (nextDashPos == std::string::npos){
+            cout << "Missing tournament parameters" << endl;
+            printTournmanetHelpCmd();
+            return false;
+        }
+        
+        char nextChar = '\0';  // default value
+        if (nextDashPos != std::string::npos && nextDashPos + 1 < cmd.size()) {
+            nextChar = cmd[nextDashPos + 1];
+        }
+        else{
+            cout << "No argument after dash" << endl;
+            printTournmanetHelpCmd();
+            return false;
+        }
+
+        if (nextChar == 'M'){
+            int givenNumMaps = 0;
+            int maxNumMaps = 5;
+            string mapName;
+            bool isValidMap = false;
+
+            parameters = returnTournamentParameters(cmd, nextDashPos);
+            if (parameters.size() == 0) return false;
+            
+            for (int mapArgument = 0; mapArgument < maxNumMaps; mapArgument++){
+                isValidMap = false;
+
+                if (mapArgument == 0){
+                    nextSpacePos = parameters.find(' ');
+                    if (nextSpacePos != std::string::npos)
+                        mapName = parameters.substr(0, nextSpacePos);
+                    else{
+                        //There is only 1 map file provided
+                        mapName = parameters;
+                        mapArgument = maxNumMaps;
+                    }
+                }
+                else{
+                    //nextSpacePos = parameters.find(' ', nextSpacePos + 1);
+                    secondNextSpacePos = parameters.find(' ', nextSpacePos + 1);
+
+                    if (secondNextSpacePos != std::string::npos)
+                        mapName = parameters.substr(nextSpacePos + 1, secondNextSpacePos - nextSpacePos - 1);
+                    else{
+                        mapName = parameters.substr(nextSpacePos + 1);
+                        mapArgument = maxNumMaps;
+                    }
+                    nextSpacePos = parameters.find(' ', nextSpacePos + 1);
+                }
+
+                for (string availableMapName : AvailableMapFiles){
+                    if (mapName == availableMapName){
+                        MapsToUse.push_back(mapName);
+                        isValidMap = true;
+                        givenNumMaps++;
+                        break;
+                    }
+                }
+
+                if (!isValidMap){
+                    cout << "Invalid map provided" << endl;
+                    printTournmanetHelpCmd();
+                    return false;
+                }
+            }
+            if (givenNumMaps < 1 || givenNumMaps > maxNumMaps || nextSpacePos != std::string::npos){
+                cout << "Invalid number of maps provided" << endl;
+                printTournmanetHelpCmd();
+                return false;
+            }
+            nextDashPos = cmd.find('-', nextDashPos + 1);
+            hasMaps = true;
+        }
+        else if (nextChar == 'P'){
+            int givenNumStrategies = 0;
+            int minNumStrategies = 2;
+            int maxNumStrategies = 4;
+            bool isValidStrategy;
+            string strategyName;
+
+            parameters = returnTournamentParameters(cmd, nextDashPos);
+            if (parameters.size() == 0) return false;
+
+            for (int strategyArgument = 0; strategyArgument < maxNumStrategies; strategyArgument++){
+                isValidStrategy = false;
+
+                if (strategyArgument == 0){
+                    nextSpacePos = parameters.find(' ');
+                    if (nextSpacePos != std::string::npos)
+                        strategyName = parameters.substr(0, nextSpacePos);
+                    else{
+                        //There is only 1 map file provided
+                        strategyName = parameters;
+                        strategyArgument = maxNumStrategies;
+                    }
+                }
+                else{
+                    // nextSpacePos = parameters.find(' ', nextSpacePos + 1);
+                    secondNextSpacePos = parameters.find(' ', nextSpacePos + 1);
+
+                    if (secondNextSpacePos != std::string::npos)
+                        strategyName = parameters.substr(nextSpacePos + 1, secondNextSpacePos - nextSpacePos - 1);
+                    else{
+                        strategyName = parameters.substr(nextSpacePos + 1);
+                        strategyArgument = maxNumStrategies;
+                    }
+                    nextSpacePos = parameters.find(' ', nextSpacePos + 1);
+                }
+
+                for (string availableStrategy : AvailableStrategies){
+                    if (strategyName == availableStrategy){
+                        StrategiesToUse.push_back(strategyName);
+                        isValidStrategy = true;
+                        givenNumStrategies++;
+                        break;
+                    }
+                }
+
+                if (!isValidStrategy){
+                    cout << "Invalid strategy provided" << endl;
+                    printTournmanetHelpCmd();
+                    return false;
+                }
+
+            }
+            if (givenNumStrategies < minNumStrategies || givenNumStrategies > maxNumStrategies || nextSpacePos != std::string::npos){
+                cout << "Invalid number of strategies provided" << endl;
+                printTournmanetHelpCmd();
+                return false;
+            }
+            nextDashPos = cmd.find('-', nextDashPos + 1);
+            hasStrategies = true;
+        }
+        else if (nextChar == 'G'){
+            int minNumGames = 1;
+            int maxNumGames = 5;
+            parameters = returnTournamentParameters(cmd, nextDashPos);
+            if (parameters.size() == 0 || parameters.find(' ') != std::string::npos){
+                cout << "Invalid number of games" << endl;
+                printTournmanetHelpCmd();
+                return false;
+            }
+
+            try{
+                numGames = std::stoi(parameters);
+            } catch (const std::invalid_argument& e) {
+                cout << "Invalid argument: " << e.what() << std::endl;
+                printTournmanetHelpCmd();
+                return false;
+            } catch (const std::out_of_range& e) {
+                cout << "Out of range: " << e.what() << std::endl;
+                printTournmanetHelpCmd();
+                return false;
+            }
+
+            if (numGames < minNumGames || numGames > maxNumGames){
+                cout << "Invalid number of games entered" << endl;
+                printTournmanetHelpCmd();
+                return false;
+            }
+            nextDashPos = cmd.find('-', nextDashPos + 1);
+            hasNumGames = true;
+        }
+        else if (nextChar == 'D'){
+            int minNumTurns = 10;
+            int maxNumTurns = 50;
+            parameters = returnTournamentParameters(cmd, nextDashPos);
+            if (parameters.size() == 0 || parameters.find(' ') != std::string::npos){
+                cout << "Invalid number of turns" << endl;
+                printTournmanetHelpCmd();
+                return false;
+            }
+
+            try{
+                numTurns = std::stoi(parameters);
+            } catch (const std::invalid_argument& e) {
+                cout << "Invalid argument: " << e.what() << std::endl;
+                printTournmanetHelpCmd();
+                return false;
+            } catch (const std::out_of_range& e) {
+                cout << "Out of range: " << e.what() << std::endl;
+                printTournmanetHelpCmd();
+                return false;
+            }
+
+            if (numTurns < minNumTurns || numTurns > maxNumTurns){
+                cout << "Invalid number of turns entered" << endl;
+                printTournmanetHelpCmd();
+                return false;
+            }
+            nextDashPos = cmd.find('-', nextDashPos + 1);
+            hasNumTurns = true;
+        }
+        else{
+            cout << "Invalid syntax" << endl;
+            printTournmanetHelpCmd();
+            return false;
+        }
+    }
+    //return (hasMaps && hasStrategies && hasNumGames && hasNumTurns);
+    if (hasMaps && hasStrategies && hasNumGames && hasNumTurns){
+        CommandProcessor::engine->setMapsToUse(MapsToUse);
+        CommandProcessor::engine->setStrategiesToUse(StrategiesToUse);
+        CommandProcessor::engine->setNumGames(numGames);
+        CommandProcessor::engine->setNumTurns(numTurns);
+        cout << "VALID TOURNAMENT" << endl;
+        return true;
+    }
+    return false;
+}
+
+string CommandProcessor::returnTournamentParameters(const string& cmd, size_t nextDashPos){
+    size_t nextLessThanPos = cmd.find('<', nextDashPos + 1);
+    size_t nextGreaterThanPos = cmd.find('>', nextDashPos + 1);
+
+    if (nextLessThanPos == std::string::npos || nextGreaterThanPos == std::string::npos || nextLessThanPos + 1 == cmd.size() || nextLessThanPos + 1 == nextGreaterThanPos){
+        cout << "Missing parameter arguments or invlaid syntax" << endl;
+        // printTournmanetHelpCmd();
+        return "";
+    }
+
+    return cmd.substr(nextLessThanPos + 1, nextGreaterThanPos - nextLessThanPos - 1);
+}
+
+void CommandProcessor::printTournmanetHelpCmd(){
+    cout << "To start a tournament please follow the syntax bellow\n\n";
+    cout << "tournament -M <listofmapfiles> -P <listofplayerstrategies> -G <numberofgames> -D <maxnumberofturns>" << endl;
+    cout << "1. listofmapfiles: are a series of available map files (1-5) separated with a space (' ') and with their name followed by .map (e.g. Antartica.map Andorra.map)" << endl;
+    cout << "2. listofplayerstrategies: are a series (between 2-4) available strategies (Aggressive, Benevolent, Neutral, Cheater) separated with a space (' ')" << endl;
+    cout << "3. numberofgames: is a number indicating how many games are to be played on each map (between 1-5)" << endl;
+    cout << "4. maxnumberofturns: is a number indication the maximum number of turns per game (between 10-50)" << endl;
 }
 
 vector<Command*> CommandProcessor::getCommandList() const

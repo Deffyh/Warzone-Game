@@ -1,0 +1,6 @@
+gamelog.txt
+*.out
+*.exe
+part1-map/mapFiles/*.txt
+.vscode/
+.DS_Store
