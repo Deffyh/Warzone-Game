@@ -125,8 +125,6 @@ void GameEngine::changeState(const string& newState, const string& message) {
 void GameEngine::runTournament() {
     MapLoader mapLoader;
     for (int n = 0; getMapsToUse().size(); n++) {
-
-
             //dont forget to del
         for (int i = 0; i < getNumGames(); i++) {
             //set map
@@ -134,62 +132,80 @@ void GameEngine::runTournament() {
 
             //set players next line (ask Howard)
 
+            for (const string& ps: getStrategiesToUse()) {
+                if (ps == "Human") {
+                    this->addPlayer(new Player("Human Player",observer_,StrategyType::Human));
+                }
+                else if (ps == "Aggressive") {
+                    this->addPlayer(new Player("Aggressive Player",observer_,StrategyType::Aggressive));
+                }
+                else if (ps == "Benevolent") {
+                    this->addPlayer(new Player("Benevolent Player",observer_,StrategyType::Benevolent));
+                }
+                else if (ps == "Neutral") {
+                    this->addPlayer(new Player("Neutral Player",observer_,StrategyType::Neutral));
+                }
+                else if (ps == "Cheater") {
+                    this->addPlayer(new Player("Cheater Player",observer_,StrategyType::Cheater));
+                }
+            }
+
             // deck + terr dist. + 50 uofa
             int numPlayer = static_cast<int>(this->players.size());
-                        int numTerr = static_cast<int>(this->map->getTerritories().size());
-                        int numCards = numPlayer * 5;
-                        int randomIndex;
-                        bool unowned;
+            int numTerr = static_cast<int>(this->map->getTerritories().size());
+            int numCards = numPlayer * 5;
+            int randomIndex;
+            bool unowned;
 
-                        Deck* deckTemp = new Deck();
-                        this->deck = deckTemp;
-                        cout<<this->deck->getDeckSize()<<endl;
-                        //delete deckTemp;
+            Deck* deckTemp = new Deck();
+            this->deck = deckTemp;
+            cout<<this->deck->getDeckSize()<<endl;
+            //delete deckTemp;
 
-                        //Add 5 * numberOfPlayer copies of each card type
-                        vector<string> cardNames = {"Bomb", "Airlift", "Negotiate", "Blockade"};
-                        for (const auto& name : cardNames) {
-                            for (int i = 0; i < numCards; ++i) {
-                                deck->addCard(new Card(name));
-                            }
-                        }
+            //Add 5 * numberOfPlayer copies of each card type
+            vector<string> cardNames = {"Bomb", "Airlift", "Negotiate", "Blockade"};
+            for (const auto& name : cardNames) {
+                for (int i = 0; i < numCards; ++i) {
+                    deck->addCard(new Card(name));
+                }
+            }
 
-                        //this->addPlayer(Player("Neutral Player"));
-                        int territoryPerPlayer = numTerr / numPlayer;
-                        int terrLeft = numTerr % numPlayer;
+            //this->addPlayer(Player("Neutral Player"));
+            int territoryPerPlayer = numTerr / numPlayer;
+            int terrLeft = numTerr % numPlayer;
 
-                        std::random_device rd;
-                        std::mt19937 g(rd());
+            std::random_device rd;
+            std::mt19937 g(rd());
 
-                        // Shuffle the vector of players to randomize the order
-                        shuffle(this->players.begin(), this->players.end(), g);
+            // Shuffle the vector of players to randomize the order
+            shuffle(this->players.begin(), this->players.end(), g);
 
-                        for (Player* player : this->players)
+            for (Player* player : this->players)
+            {
+                //assign the correct number of territories per player
+                for (int i = 0 ;i<territoryPerPlayer;i++)
+                {
+                    unowned=true;
+
+                    //choose random number corresponds to index to territory
+                    //continue to randomize the territory until an unowned territory is found
+                    while (unowned){
+                        randomIndex= rand() % numTerr;
+                        if (map->getTerritories()[randomIndex]->getOwner()==nullptr)
                         {
-                            //assign the correct number of territories per player
-                            for (int i = 0 ;i<territoryPerPlayer;i++)
-                            {
-                                unowned=true;
-
-                                //choose random number corresponds to index to territory
-                                //continue to randomize the territory until an unowned territory is found
-                                while (unowned){
-                                    randomIndex= rand() % numTerr;
-                                    if (map->getTerritories()[randomIndex]->getOwner()==nullptr)
-                                    {
-                                        map->getTerritories()[randomIndex]->setOwner(player);
-                                        player->addTerritory(map->getTerritories()[randomIndex]);
-                                        unowned=false;
-                                    }
-                                }
-                            }
-                            //give every player 50 army unit
-                            player->addNumArmies(50);
-                            //make the player draw a card twice
-                            player->getHand()->draw(*this->deck);
-                            player->getHand()->draw(*this->deck);
-
+                            map->getTerritories()[randomIndex]->setOwner(player);
+                            player->addTerritory(map->getTerritories()[randomIndex]);
+                            unowned=false;
                         }
+                    }
+                }
+                //give every player 50 army unit
+                player->addNumArmies(50);
+                //make the player draw a card twice
+                player->getHand()->draw(*this->deck);
+                player->getHand()->draw(*this->deck);
+
+            }
 
         //clear players and map for next game
             //delete deck maybe?
@@ -578,17 +594,23 @@ void GameEngine::mainGameLoop() {
         if (counter != numTurns) {
             issueOrdersPhase(players,map);
             printAllPlayerOrders(players);
-            //executeOrdersPhase();
-            //printAllPlayerOrders(players);
-
-
             if (executeOrdersPhase()) {
                 roundOver = true;
 
             }
+            counter++;
+            //add flag to draw one card if a territory was conquered
+            for (Player* player : players) {
+                if (player->getEarnedCard()) {
+                    player->addCard(deck->draw());
+                }
+            }
+
         }
         else {
             //end game in a draw
+            cout << "Turn limit reached, game ends in a draw." << endl;
+            roundOver = true;
         }
     }
 }
