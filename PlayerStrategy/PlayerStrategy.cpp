@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <unordered_set>
 
+
 PlayerStrategy::PlayerStrategy(const PlayerStrategy &other) {
     this->player = other.player;
     this->type = other.type;

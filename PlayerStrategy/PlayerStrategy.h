@@ -18,6 +18,7 @@ enum class StrategyType {
     Neutral,
     Cheater
 };
+
 class PlayerStrategy {
 protected:
     StrategyType type;
