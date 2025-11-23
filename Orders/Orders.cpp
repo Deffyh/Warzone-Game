@@ -473,11 +473,6 @@ void OrdersAirlift::execute(){
         delete o;
         return;
     }
-    if (targetTerritory->getOwner()->getPlayerStrategy()->getType() == StrategyType::Neutral) {
-        if (auto* neutral = dynamic_cast<NeutralPlayerStrategy*>(targetTerritory->getOwner()->getPlayerStrategy())) {
-            neutral->setAttacked();
-        }
-    }
 
     int sourceNumArmies = this->getSourceTerritory()->getNumOfArmies();
     int targetNumArmies = this->getTargetTerritory()->getNumOfArmies();
