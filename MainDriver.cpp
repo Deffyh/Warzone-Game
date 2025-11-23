@@ -14,8 +14,8 @@ extern void testLoggingObserver();
 
 int main(){
     //testCommandProcessor();
-    //testGameStates();
-    testMainGameLoop();
+    testGameStates();
+    //testMainGameLoop();
     //testOrderExecution();
     //testLoggingObserver();
 
