@@ -208,7 +208,13 @@ void GameEngine::runTournament() {
             }
 
         //clear players and map for next game
-            //delete deck maybe?
+            for (Player* player : this->players) {
+                this->removePlayer(player);
+            }
+            delete map;
+            map = nullptr;
+
+         // deck gets auto deleted
 
         }
     }
