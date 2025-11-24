@@ -34,6 +34,8 @@ class GameEngine : public Subject, public ILoggable{
         int numGames;
         int numTurns;
         int counter;
+        int mapCounter;
+        vector<vector<string>> winnerList;
 
     public:
         explicit GameEngine(Observer* observer); //Default constructor
@@ -75,7 +77,7 @@ class GameEngine : public Subject, public ILoggable{
 
         int getNumGames();
         void setNumGames(int games);
-        vector<vector<std::string>> winnerList;
+
         int getNumTurns();
         void setNumTurns(int turns);
         void runTournament();

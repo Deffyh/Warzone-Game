@@ -126,8 +126,8 @@ void GameEngine::changeState(const string& newState, const string& message) {
 void GameEngine::runTournament() {
     MapLoader mapLoader;
     //========
-    arr[ ]
-
+    mapCounter = 0;
+    winnerList = vector<vector<string>>(getMapsToUse().size());
     for (int n = 0; n < getMapsToUse().size(); n++) {
             //dont forget to del
         for (int i = 0; i < getNumGames(); i++) {
@@ -227,6 +227,7 @@ void GameEngine::runTournament() {
 
          // deck gets auto deleted
         }
+        mapCounter++;
     }
 }
 
@@ -626,6 +627,7 @@ void GameEngine::mainGameLoop() {
         else {
             //end game in a draw
             cout << "Turn limit reached, game ends in a draw." << endl;
+            winnerList[mapCounter].push_back("Draw");
             roundOver = true;
         }
     }
@@ -968,14 +970,14 @@ bool GameEngine::checkWinCondition(const std::vector<Player*>& players, Map* map
         // Win condition: owns all territories
         if (ownedCount == totalTerritories) {
             cout << "Player " << player->getName() << " controls the entire map!" << endl;
-
+            winnerList[mapCounter].push_back(player->getName());
             state = "win";
             return true;
         }
     }
     if (players.size() == 1) {
         cout << "Player " << players[0]->getName() << " is the only player left!" << endl;
-
+        winnerList[mapCounter].push_back(players[0]->getName());
         state = "win";
         return true;
     }
