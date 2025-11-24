@@ -75,7 +75,7 @@ class GameEngine : public Subject, public ILoggable{
 
         int getNumGames();
         void setNumGames(int games);
-
+        vector<vector<std::string>> winnerList;
         int getNumTurns();
         void setNumTurns(int turns);
         void runTournament();
