@@ -124,7 +124,7 @@ void GameEngine::changeState(const string& newState, const string& message) {
 
 void GameEngine::runTournament() {
     MapLoader mapLoader;
-    for (int n = 0; getMapsToUse().size(); n++) {
+    for (int n = 0; n<getMapsToUse().size(); n++) {
             //dont forget to del
         for (int i = 0; i < getNumGames(); i++) {
             //set map
