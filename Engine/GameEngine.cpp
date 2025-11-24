@@ -42,6 +42,7 @@ GameEngine::GameEngine(Observer* observer) : state("start"), gameOver(false),map
 {
     Subject::addObserver(observer);
     GameEngine::notify(*this);
+    counter = 0;
 }
 
 GameEngine::GameEngine(const GameEngine& other)  : Subject(other) {
@@ -124,11 +125,19 @@ void GameEngine::changeState(const string& newState, const string& message) {
 
 void GameEngine::runTournament() {
     MapLoader mapLoader;
-    for (int n = 0; n<getMapsToUse().size(); n++) {
+    //========
+    arr[ ]
+
+    for (int n = 0; n < getMapsToUse().size(); n++) {
             //dont forget to del
         for (int i = 0; i < getNumGames(); i++) {
             //set map
+            counter = 0;
             this->map = new Map(mapLoader.loadMap(getMapsToUse()[n]));
+            //debug purpose
+            cout << endl;
+            cout << "New Tournament game has begun!" << endl;
+            cout << endl;
 
             //set players next line (ask Howard)
 
@@ -157,9 +166,10 @@ void GameEngine::runTournament() {
             int randomIndex;
             bool unowned;
 
+
             Deck* deckTemp = new Deck();
             this->deck = deckTemp;
-            cout<<this->deck->getDeckSize()<<endl;
+            //cout<<this->deck->getDeckSize()<<endl;
             //delete deckTemp;
 
             //Add 5 * numberOfPlayer copies of each card type
@@ -206,6 +216,7 @@ void GameEngine::runTournament() {
                 player->getHand()->draw(*this->deck);
 
             }
+            mainGameLoop();
 
         //clear players and map for next game
             for (Player* player : this->players) {
@@ -215,7 +226,6 @@ void GameEngine::runTournament() {
             map = nullptr;
 
          // deck gets auto deleted
-
         }
     }
 }
@@ -396,8 +406,6 @@ void GameEngine::startupPhase()
 
                         runTournament();
                         // Enter tournament logic or tournament function call here
-
-                        gameOver = true;
 
                     }
                 }
@@ -960,12 +968,14 @@ bool GameEngine::checkWinCondition(const std::vector<Player*>& players, Map* map
         // Win condition: owns all territories
         if (ownedCount == totalTerritories) {
             cout << "Player " << player->getName() << " controls the entire map!" << endl;
+
             state = "win";
             return true;
         }
     }
     if (players.size() == 1) {
         cout << "Player " << players[0]->getName() << " is the only player left!" << endl;
+
         state = "win";
         return true;
     }
