@@ -102,6 +102,7 @@ Player::Player(const Player& other)
 Player::~Player() {
     delete hand;
     delete orderList;
+    delete ps;
 }
 
 Player& Player::operator=(const Player& other) {
