@@ -6,7 +6,7 @@
 #include <limits>
 #include <algorithm>
 #include <random>
-
+#include "../Logging-Observer/LoggingObserver.h"
 #include "../CommandProcessor/CommandProcessing.h"
 #include "../Orders/Orders.h"
 #include "../Part-4-Deck/Cards.h"
@@ -209,6 +209,11 @@ void GameEngine::runTournament() {
                         }
                     }
                 }
+
+
+
+
+
                 //give every player 50 army unit
                 player->addNumArmies(50);
                 //make the player draw a card twice
@@ -216,6 +221,21 @@ void GameEngine::runTournament() {
                 player->getHand()->draw(*this->deck);
 
             }
+
+            if (terrLeft != 0)
+            {
+                for (Territory* territory : this->map->getTerritories())
+                {
+                    if (territory->getOwner() == nullptr)
+                    {
+                        //setting the owner as the last player added to the vector (neutral player)
+                        territory->setOwner(this->players.back());
+                    }
+                }
+            }
+
+
+
             mainGameLoop();
 
         //clear players and map for next game
@@ -223,12 +243,13 @@ void GameEngine::runTournament() {
                 this->removePlayer(player);
             }
             delete map;
-            map = nullptr;
+           // map = nullptr;
 
          // deck gets auto deleted
         }
         mapCounter++;
     }
+   logWinners(winnerList, numGames, getMapsToUse().size());
 }
 
 void GameEngine::startupPhase()

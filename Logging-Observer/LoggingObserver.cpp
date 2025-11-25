@@ -118,3 +118,34 @@ ostream& operator<<(ostream &out, ILoggable &i)
     out<<i.stringToLog()<<endl;
     return out;
 }
+
+void logWinners(std::vector<std::vector<std::string>> &winnerList, int numberOfGames, int numberOfMaps){
+    std::ofstream out("gamelog.txt", std::ios::out | std::ios::app);
+    if (!out.is_open()) {
+        std::cout << "Couldn't open gamelog.txt." << std::endl;
+        return;
+    }
+
+    out << "Results:\n";
+
+    out << "\t\t\t\t\t\t\t\t\t";
+    for (int g = 0; g < numberOfGames; g++) {
+        out << "Game " << g + 1 << "\t\t\t\t\t\t\t";
+    }
+    out << "\n";
+
+
+    for (int m = 0; m < numberOfMaps; m++) {
+        out << "Map " << m + 1 << "\t\t\t\t\t\t\t";
+
+        for (int g = 0; g < numberOfGames; g++) {
+            if (g < winnerList.size() && m < winnerList[g].size()) {
+                out << winnerList[g][m] << "\t\t\t\t\t\t\t";
+            }
+        }
+
+        out << "\n";
+    }
+
+    out << " LINE REACHED \n";  // extra line break
+};
