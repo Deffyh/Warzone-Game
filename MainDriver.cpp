@@ -13,11 +13,20 @@ extern void testMainGameLoop();
 extern void testLoggingObserver();
 
 int main(){
-    testCommandProcessor();
-    testGameStates();
-    testMainGameLoop();
-    testOrderExecution();
-    testLoggingObserver();
+    //testCommandProcessor();
+    // testGameStates();
+    // testMainGameLoop();
+    // testOrderExecution();
+    // testLoggingObserver();
+
+    Player* p1 = new Player("p1");
+    Territory* Ontario = new Territory("Ontario", new Continent("Canada", 5), 5, 6,{});
+    auto* o1 = new OrdersBomb(p1, Ontario,new LogObserver());
+
+    if (typeid(o1)==typeid(Orders))
+    {
+        cout<<"OrdersAdvance"<<endl;
+    }
 
 
     return 0;

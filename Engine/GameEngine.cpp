@@ -14,6 +14,8 @@
 #include <sstream>
 #include <tuple>
 
+#include "../PlayerStrategy/PlayerStrategy.h"
+
 using std::string;
 using std::cout;
 using std::endl;
@@ -292,7 +294,6 @@ void GameEngine::startupPhase()
                     command = textFile->getCommand(this->state);
                     //if the command is invalid, the prompt will be run until a valid command is entered
                     while (command==nullptr){
-                        cout<<"The command entered was invalid, please try again!"<<endl;
                         command = textFile->getCommand(this->state);
                     }
                     input=command->getCommand();
@@ -565,7 +566,8 @@ void GameEngine::issueOrdersPhase(vector<Player*>& players , Map* map) {
     while (!allDone) {
         allDone = true; //assumes no action taken by player until proven otherwise
 
-        for (size_t i = 0; i < players.size(); i++) {
+        for (size_t i = 0; i < players.size(); i++)
+        {
             //current turn player
             Player* player = players[i];
             if (player && player->getName() == "Neutral Player") {
@@ -586,92 +588,210 @@ void GameEngine::issueOrdersPhase(vector<Player*>& players , Map* map) {
             int choice;
 
             //Done issuing Orders.int choice;
-            while (true) {
-                cout << "\nPlayer " << player->getName() << " has " << player->getNumFreeArmies() << " free army units (" <<  player->getNumArmies() <<" total army units). Please issue an order:\n";
-                cout << "1. Deploy\n2. Advance\n3. Bomb\n4. Blockade\n5. Airlift\n6. Negotiate\n7. Finish issuing\nChoice: ";
+            if (typeid(player->getPlayerStrategy()) == typeid(HumanPlayerStrategy))
+            {
+                while (true)
+                {
+                    cout << "\nPlayer " << player->getName() << " has " << player->getNumFreeArmies() <<
+                        " free army units (" << player->getNumArmies() <<
+                        " total army units). Please issue an order:\n";
+                    cout <<
+                        "1. Deploy\n2. Advance\n3. Bomb\n4. Blockade\n5. Airlift\n6. Negotiate\n7. Finish issuing\nChoice: ";
 
-                if (!(cin >> choice)) {
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                    cout << "Invalid input. Please enter a number." << endl;
-                    cout << "Skipping your turn." << endl;
+                    if (!(cin >> choice))
+                    {
+                        cin.clear();
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        cout << "Invalid input. Please enter a number." << endl;
+                        cout << "Skipping your turn." << endl;
+                        playerDone[i] = true;
+                        continue;
+                    }
+
+
+                    if (choice == 8)
+                    {
+                        cout << "Exiting order issuance." << endl;
+                        state = "win";
+                        return;
+                    }
+
+                    if (player->getNumFreeArmies() > 0 && choice != 1 && choice != 7)
+                    {
+                        cout << "You still have " << player->getNumArmies()
+                            << " undeployed armies. You must deploy them before issuing other orders." << endl;
+                        continue;
+                    }
+
+                    if (choice < 1 || choice > 8)
+                    {
+                        cout << "Invalid choice. Please try again." << endl;
+                        continue;
+                    }
+                    break;
+                }
+                if (choice == 7)
+                {
                     playerDone[i] = true;
+                    cout << player->getName() << " is done issuing orders." << endl;
                     continue;
                 }
 
-                if (choice == 8) {
-                    cout << "Exiting order issuance." << endl;
-                    state = "win";
-                    return;
-                }
+                //Pick territories
+                Territory* source = nullptr;
+                Territory* target = nullptr;
+                Player* targetPlayer = nullptr;
 
-                if (player->getNumFreeArmies() > 0 && choice != 1 && choice != 7) {
-                    cout << "You still have " << player->getNumArmies()
-                         << " undeployed armies. You must deploy them before issuing other orders." << endl;
-                    continue;
-                }
+                //Checks for the necessary parameters
+                if (choice != 1 && choice != 4 && choice != 6)
+                {
+                    //if requires two location
+                    string sourceName, targetName;
+                    cout << "Enter source territory name: ";
+                    cin >> sourceName;
+                    cout << "Enter target territory name: ";
+                    cin >> targetName;
 
-                if (choice < 1 || choice > 8) {
-                    cout << "Invalid choice. Please try again." << endl;
-                    continue;
+                    source = player->findTerritoryByName(sourceName);
+                    target = map->getTerritory(targetName);
+
+                    if (!source || !target)
+                    {
+                        cout << "Invalid territories." << endl;
+                        continue;
+                    }
                 }
-                break;
+                else if (choice == 1 || choice == 4)
+                {
+                    //if requires one location
+                    string terrName;
+                    cout << "Enter territory name: ";
+                    cin >> terrName;
+                    source = player->findTerritoryByName(terrName);
+                    if (!source)
+                    {
+                        cout << "Invalid territory." << endl;
+                        continue;
+                    }
+                }
+                else if (choice == 6)
+                {
+                    //if requires a 2nd player name
+                    string otherPlayerName;
+                    cout << "Enter other player name: ";
+                    cin >> otherPlayerName;
+                    for (auto* p : players)
+                        if (p->getName() == otherPlayerName)
+                            targetPlayer = p;
+                }
+                //Insert a number of army to send out
+                int armies = 0;
+                if (choice == 1 || choice == 2 || choice == 5)
+                {
+                    cout << "Enter number of armies: ";
+                    cin >> armies;
+                }
+                //creation of the order
+                player->issueOrder(*deck, choice, source, armies, target, *targetPlayer, observer_);
+                cout << "Order issued successfully!" << endl;
             }
+            else if (typeid(player->getPlayerStrategy()) == typeid(AggressivePlayerStrategy))
+            {
 
+                //Pick territories
+                Territory* source = nullptr;
+                Territory* target = nullptr;
+                Player* targetPlayer = nullptr;
 
-            if (choice == 7) {
+                //First deploy all armies to the strongest country
+                int availableA = player->getNumFreeArmies();
+                //returns strongest territory owned
+                source = player->toDefend(this->map->getTerritories()).front();
+
+                player->issueOrder(*this->deck, 1,source, availableA, target, *targetPlayer, observer_);
+                cout << "Order issued successfully!" << endl;
+
+                //Second we advance all our armies from other territories to strongest territory (front of toDefend vector)
+                for (Territory* t : player->getTerritories())
+                {
+                    if (!(*t==*player->toDefend(this->map->getTerritories()).front()))
+                    {
+                        if (t->getNumOfArmies()!=0)
+                        {
+                            player->issueOrder(*this->deck, 2,t,t->getNumOfArmies(),player->toDefend(this->map->getTerritories()).front(),*targetPlayer,this->observer_);
+                        }
+                    }
+                }
+
+                //Third move all armies in strongest country owned to weakest enemy territory
+                targetPlayer = player->toAttack(this->map->getTerritories()).front()->getOwner();
+                source = player->toDefend(this->map->getTerritories()).front();
+                target = player->toAttack(this->map->getTerritories()).front();
+                availableA = source->getNumOfArmies();
+                player->issueOrder(*this->deck,2,source,availableA, target, *targetPlayer,observer_);
                 playerDone[i] = true;
-                cout << player->getName() << " is done issuing orders." << endl;
-                continue;
             }
+            else if (typeid(player->getPlayerStrategy()) == typeid(BenevolentPlayerStrategy))
+            {
 
-            //Pick territories
-            Territory* source = nullptr;
-            Territory* target = nullptr;
-            Player* targetPlayer = nullptr;
-
-            //Checks for the necessary parameters
-            if (choice != 1 && choice != 4 && choice != 6) { //if requires two location
-                string sourceName, targetName;
-                cout << "Enter source territory name: ";
-                cin >> sourceName;
-                cout << "Enter target territory name: ";
-                cin >> targetName;
-
-                source = player->findTerritoryByName(sourceName);
-                target = map->getTerritory(targetName);
-
-                if (!source || !target) {
-                    cout << "Invalid territories." << endl;
-                    continue;
+                //Pick territories
+                Territory* source = nullptr;
+                Territory* target = nullptr;
+                Player* targetPlayer = nullptr;
+                //get list of territories ordered from weakest to strongest
+                vector<Territory*> defendList=player->toDefend(this->map->getTerritories());
+                if(defendList.empty()) return;
+                //deploy all armies to the weakest country
+                source=defendList.front();
+                int availableA = player->getNumFreeArmies();
+                 //toDefend() for BenevolentPlayer returns weakest- strongest, so front() is the weakest
+                player->issueOrder(*this->deck, 1,source, availableA, target, *targetPlayer, observer_);
+                cout << "Deployed " << availableA << " armies to " << source->getName() << endl;
+                //advance all our armies from other territories to the weakest territory 
+                for (Territory* t : player->getTerritories())
+                {
+                    if (!(*t == *source) && t->getNumOfArmies() > 1) 
+                  {
+                     int moveArmies = t->getNumOfArmies() / 2; //move half of armies
+                    player->issueOrder(*this->deck, 2, t, moveArmies, source, *player, observer_);
+                    cout << "Moved " << moveArmies << " armies from " << t->getName() << " to " << source->getName() << endl;
+                   }
                 }
-            } else if (choice == 1 || choice == 4) { //if requires one location
-                string terrName;
-                cout << "Enter territory name: ";
-                cin >> terrName;
-                source = player->findTerritoryByName(terrName);
-                if (!source) {
-                    cout << "Invalid territory." << endl;
-                    continue;
-                }
-            } else if (choice == 6) { //if requires a 2nd player name
-                string otherPlayerName;
-                cout << "Enter other player name: ";
-                cin >> otherPlayerName;
-                for (auto* p : players)
-                    if (p->getName() == otherPlayerName)
-                        targetPlayer = p;
-            }
-            //Insert a number of army to send out
-            int armies = 0;
-            if (choice == 1 || choice == 2 || choice == 5) {
-                cout << "Enter number of armies: ";
-                cin >> armies;
-            }
 
-            //creation of the order
-            player->issueOrder(*deck,choice, source, armies, target, *targetPlayer, observer_);
-            cout << "Order issued successfully!" << endl;
+                /*
+                 * if(player->toDefend(this->map->getTerritories())[1]->getNumArmies()==0){
+                 *  //search for terr with most armies and move half (floor function) to player->toDefend(this->map->getTerritories())[1] (2nd weakest territory)
+                 * }
+                 */
+
+                  //making sure not just the weakest but also the second weakest territory is protected
+                  if (defendList.size() > 1) {
+                  Territory* secondWeakest = defendList[1];
+                   if (secondWeakest->getNumOfArmies() == 0) //checking if the second weakest territory has any armies 
+                {
+                //finding the strongest terr to reinforce the 2nd weakest
+                Territory* strongestTerr = nullptr;
+                int maxArmies = -1;
+                 for (Territory* t : player->getTerritories())
+                {
+                if (t != secondWeakest && t->getNumOfArmies() > maxArmies)
+                 {
+                    strongestTerr = t;
+                    maxArmies = t->getNumOfArmies();
+                  }
+                } 
+                //move half the armies from strongest to 2nd weakest
+                if (strongestTerr && maxArmies > 1)
+                {
+                int moveArmies = maxArmies / 2;
+                player->issueOrder(*this->deck, 2, strongestTerr, moveArmies, secondWeakest, *player, observer_);
+                cout << "Moved " << moveArmies << " armies from " << strongestTerr->getName()
+                     << " to reinforce " << secondWeakest->getName() << endl;
+                }
+             }
+           }
+            playerDone[i] = true;
+            }
 
             allDone = false; // player can make another action after this current one + turn order wait
 

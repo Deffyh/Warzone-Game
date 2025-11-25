@@ -88,6 +88,7 @@ public:
     bool isConnected(Territory* t1, Territory* t2);
     //mutators
     void setName(const string& n);
+    void clearTerritories();
     void setPointsToConquer(int p);
     void addTerritory(Territory* t);
     //initialize the size of the matrix

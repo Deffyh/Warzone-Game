@@ -54,6 +54,7 @@ Map::Map(const Map& otherMap){
 
     for (Continent* c: otherMap.continents) {
         this->continents.push_back(new Continent(*c));
+        this->continents.back()->clearTerritories();
     }
     for (Territory *t: otherMap.territories) {
         this->territories.push_back(new Territory(*t));
@@ -88,8 +89,10 @@ Map& Map::operator = (const Map& otherMap){
         delete c;
     }
     continents.clear();
+
     for (Continent* c: otherMap.continents) {
         this->continents.push_back(new Continent(*c));
+        this->continents.back()->clearTerritories();
     }
     for (Territory *t: otherMap.territories) {
         this->territories.push_back(new Territory(*t));
@@ -314,6 +317,11 @@ void Continent::setName(const string& n){
     name=n;
 }
 
+void Continent::clearTerritories()
+{
+    this->territories.clear();
+}
+
 int Continent::getPointsToConquer() const{
     return pointsToConquer;
 }
@@ -399,7 +407,7 @@ ostream& operator << (ostream& out, const Continent& continent){
 //constructor
 Territory::Territory(const string& n, Continent* c, const int x_coord, const int y_coord, const vector <string>& adjT):
     name(n),
-    continent(new Continent(*c)),
+    continent(c),
     owner(nullptr),
     numOfArmies(0),
     x(x_coord),
@@ -410,7 +418,7 @@ Territory::Territory(const string& n, Continent* c, const int x_coord, const int
 //copy constructor
 Territory::Territory(const Territory& otherTerr){
     this->name=otherTerr.name;
-    this->continent=new Continent(*otherTerr.continent);
+    this->continent=otherTerr.continent;
     this->owner=otherTerr.owner;
     this->numOfArmies=otherTerr.numOfArmies;
     this->x=otherTerr.x;
