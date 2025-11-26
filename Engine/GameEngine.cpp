@@ -180,9 +180,6 @@ void GameEngine::runTournament() {
                 }
             }
 
-            //this->addPlayer(Player("Neutral Player"));
-            int territoryPerPlayer = numTerr / numPlayer;
-            int terrLeft = numTerr % numPlayer;
 
             std::random_device rd;
             std::mt19937 g(rd());
@@ -190,51 +187,47 @@ void GameEngine::runTournament() {
             // Shuffle the vector of players to randomize the order
             shuffle(this->players.begin(), this->players.end(), g);
 
-            for (Player* player : this->players)
+            int indexP=0;
+            for (Territory* t: this->map->getTerritories())
             {
-                //assign the correct number of territories per player
-                for (int i = 0 ;i<territoryPerPlayer;i++)
+                if (t->getOwner()==nullptr)
                 {
-                    unowned=true;
-
-                    //choose random number corresponds to index to territory
-                    //continue to randomize the territory until an unowned territory is found
-                    while (unowned){
-                        randomIndex= rand() % numTerr;
-                        if (map->getTerritories()[randomIndex]->getOwner()==nullptr)
-                        {
-                            map->getTerritories()[randomIndex]->setOwner(player);
-                            player->addTerritory(map->getTerritories()[randomIndex]);
-                            unowned=false;
-                        }
+                    t->setOwner(this->players[indexP]);
+                    this->players[indexP]->addTerritory(t);
+                    indexP++;
+                    if (indexP == players.size())
+                    {
+                        indexP = 0;
                     }
                 }
+            }
 
+            for (Player* player : this->players){
 
-
-
+            //     //assign the correct number of territories per player
+            //     for (int i = 0 ;i<territoryPerPlayer;i++)
+            //     {
+            //         unowned=true;
+            //
+            //         //choose random number corresponds to index to territory
+            //         //continue to randomize the territory until an unowned territory is found
+            //         while (unowned){
+            //             randomIndex= rand() % numTerr;
+            //             if (map->getTerritories()[randomIndex]->getOwner()==nullptr)
+            //             {
+            //                 map->getTerritories()[randomIndex]->setOwner(player);
+            //                 player->addTerritory(map->getTerritories()[randomIndex]);
+            //                 unowned=false;
+            //             }
+            //         }
+            //     }
 
                 //give every player 50 army unit
                 player->addNumArmies(50);
                 //make the player draw a card twice
                 player->getHand()->draw(*this->deck);
                 player->getHand()->draw(*this->deck);
-
             }
-
-            if (terrLeft != 0)
-            {
-                for (Territory* territory : this->map->getTerritories())
-                {
-                    if (territory->getOwner() == nullptr)
-                    {
-                        //setting the owner as the last player added to the vector (neutral player)
-                        territory->setOwner(this->players.back());
-                    }
-                }
-            }
-
-
 
             mainGameLoop();
 
@@ -242,7 +235,7 @@ void GameEngine::runTournament() {
             for (Player* player : this->players) {
                 this->removePlayer(player);
             }
-            delete map;
+            //delete map;
            // map = nullptr;
 
          // deck gets auto deleted
@@ -335,6 +328,8 @@ void GameEngine::startupPhase()
                         int randomIndex;
                         bool unowned;
 
+                        this->numTurns=100;
+
                         Deck* deckTemp = new Deck();
                         this->deck = deckTemp;
                         cout<<this->deck->getDeckSize()<<endl;
@@ -358,25 +353,40 @@ void GameEngine::startupPhase()
                         // Shuffle the vector of players to randomize the order
                         shuffle(this->players.begin(), this->players.end(), g);
 
-                        for (Player* player : this->players)
-                        {
-                            //assign the correct number of territories per player
-                            for (int i = 0 ;i<territoryPerPlayer;i++)
-                            {
-                                unowned=true;
 
-                                //choose random number corresponds to index to territory
-                                //continue to randomize the territory until an unowned territory is found
-                                while (unowned){
-                                    randomIndex= rand() % numTerr;
-                                    if (map->getTerritories()[randomIndex]->getOwner()==nullptr)
-                                    {
-                                        map->getTerritories()[randomIndex]->setOwner(player);
-                                        player->addTerritory(map->getTerritories()[randomIndex]);
-                                        unowned=false;
-                                    }
+                        int indexP=0;
+                        for (Territory* t: this->map->getTerritories())
+                        {
+                            if (t->getOwner()==nullptr)
+                            {
+                                t->setOwner(this->players[indexP]);
+                                this->players[indexP]->addTerritory(t);
+                                indexP++;
+                                if (indexP == players.size())
+                                {
+                                    indexP = 0;
                                 }
                             }
+                        }
+
+                        for (Player* player : this->players){
+                        //     //assign the correct number of territories per player
+                        //     for (int i = 0 ;i<territoryPerPlayer;i++)
+                        //     {
+                        //         unowned=true;
+                        //
+                        //         //choose random number corresponds to index to territory
+                        //         //continue to randomize the territory until an unowned territory is found
+                        //         while (unowned){
+                        //             randomIndex= rand() % numTerr;
+                        //             if (map->getTerritories()[randomIndex]->getOwner()==nullptr)
+                        //             {
+                        //                 map->getTerritories()[randomIndex]->setOwner(player);
+                        //                 player->addTerritory(map->getTerritories()[randomIndex]);
+                        //                 unowned=false;
+                        //             }
+                        //         }
+                        //     }
                             //give every player 50 army unit
                             player->addNumArmies(50);
                             //make the player draw a card twice
@@ -391,19 +401,6 @@ void GameEngine::startupPhase()
                          //adding the neutral player
                          //OrdersBlockade::neutralPlayer=this->players.back();
                         //this->addPlayer(Player("Neutral Player"));
-
-                         //if there are leftover territories then they are given to the neutral player
-                         if (terrLeft != 0)
-                         {
-                             for (Territory* territory : this->map->getTerritories())
-                             {
-                                 if (territory->getOwner() == nullptr)
-                                 {
-                                     //setting the owner as the last player added to the vector (neutral player)
-                                     territory->setOwner(this->players.back());
-                                 }
-                             }
-                         }
 
                         mainGameLoop();
                     }
@@ -437,10 +434,13 @@ void GameEngine::startupPhase()
             }
         case 2:
             {
-                cout << "You have chosen to use a text file for the startup phase!\nEnter the file name in the following format filename.txt :\n"<<endl;
+                this->winnerList = vector<vector<string>>(1);
+                cout <<
+                    "You have chosen to use a text file for the startup phase!\nEnter the file name in the following format filename.txt :\n"
+                    << endl;
                 string filename;
                 cin >> filename;
-                auto* textFile= new FileCommandProcessorAdapter(this->observer_, filename);
+                auto* textFile = new FileCommandProcessorAdapter(this->observer_, filename);
                 Command* command;
                 string input;
                 while (!gameOver)
@@ -486,11 +486,14 @@ void GameEngine::startupPhase()
                         if (name.empty()) {
                             cout << "Missing player name for addplayer\n";
                         } else {
-                            if (this->players.size() == 1) {
-                                this->addPlayer(new Player(name, observer_, StrategyType::Cheater));  //For now testing
+                            if (this->players.size() == 0) {
+                                this->addPlayer(new Player("cheater", observer_, StrategyType::Cheater));  //For now testing
+                                this->addPlayer(new Player("Neutral", observer_, StrategyType::Neutral));  //For now testing
+                                this->addPlayer(new Player("Aggressive", observer_, StrategyType::Aggressive));  //For now testing
+                                this->addPlayer(new Player("Benevolent", observer_, StrategyType::Benevolent));  //For now testing
                             }
-                            else {
-                                this->addPlayer(new Player(name, observer_, StrategyType::Neutral));  //For now testing
+                            if (this->players.size() != 0) {
+                                this->addPlayer(new Player(name, observer_, StrategyType::Human));  //For now testing
                             }
 
                             command->saveEffect();
@@ -508,6 +511,8 @@ void GameEngine::startupPhase()
                         int numCards = numPlayer * 5;
                         int randomIndex;
                         bool unowned;
+
+                        this->numTurns=100;
 
                         Deck* deckTemp = new Deck();
                         this->deck = deckTemp;
@@ -530,25 +535,41 @@ void GameEngine::startupPhase()
                         // Shuffle the vector of players to randomize the order
                         shuffle(this->players.begin(), this->players.end(), g);
 
-                        for (Player* player : this->players)
-                        {
-                            //assign the correct number of territories per player
-                            for (int i = 0;i<territoryPerPlayer;i++)
-                            {
-                                unowned=true;
 
-                                //choose random number corresponds to index to territory
-                                //continue to randomize the territory until an unowned territory is found
-                                while (unowned){
-                                    randomIndex= rand() % numTerr;
-                                    if (map->getTerritories()[randomIndex]->getOwner()==nullptr)
-                                    {
-                                        map->getTerritories()[randomIndex]->setOwner(player);
-                                        player->addTerritory(map->getTerritories()[randomIndex]);
-                                        unowned=false;
-                                    }
+                        int indexP=0;
+                        for (Territory* t: this->map->getTerritories())
+                        {
+                            if (t->getOwner()==nullptr)
+                            {
+                                t->setOwner(this->players[indexP]);
+                                this->players[indexP]->addTerritory(t);
+                                indexP++;
+                                if (indexP == players.size())
+                                {
+                                    indexP = 0;
                                 }
                             }
+                        }
+
+                        for (Player* player : this->players){
+
+                            //     //assign the correct number of territories per player
+                            //     for (int i = 0 ;i<territoryPerPlayer;i++)
+                            //     {
+                            //         unowned=true;
+                            //
+                            //         //choose random number corresponds to index to territory
+                            //         //continue to randomize the territory until an unowned territory is found
+                            //         while (unowned){
+                            //             randomIndex= rand() % numTerr;
+                            //             if (map->getTerritories()[randomIndex]->getOwner()==nullptr)
+                            //             {
+                            //                 map->getTerritories()[randomIndex]->setOwner(player);
+                            //                 player->addTerritory(map->getTerritories()[randomIndex]);
+                            //                 unowned=false;
+                            //             }
+                            //         }
+                            //     }
                             //give every player 50 army unit
                             player->addNumArmies(50);
                             //make the player draw a card twice
@@ -565,17 +586,17 @@ void GameEngine::startupPhase()
 
                          //if there are leftover territories then they are given to the neutral player
                         //this->addPlayer(Player("Neutral Player"));
-                         if (terrLeft != 0)
-                         {
-                             for (Territory* territory : this->map->getTerritories())
-                             {
-                                 if (territory->getOwner() == nullptr)
-                                 {
-                                     //setting the owner as the last player added to the vector (neutral player)
-                                     territory->setOwner(this->players.back());
-                                 }
-                             }
-                         }
+                         // if (terrLeft != 0)
+                         // {
+                         //     for (Territory* territory : this->map->getTerritories())
+                         //     {
+                         //         if (territory->getOwner() == nullptr)
+                         //         {
+                         //             //setting the owner as the last player added to the vector (neutral player)
+                         //             territory->setOwner(this->players.back());
+                         //         }
+                         //     }
+                         // }
 
                         mainGameLoop();
                     }
@@ -648,7 +669,7 @@ void GameEngine::mainGameLoop() {
         else {
             //end game in a draw
             cout << "Turn limit reached, game ends in a draw." << endl;
-            winnerList[mapCounter].push_back("Draw");
+            winnerList[mapCounter].emplace_back("Draw");
             roundOver = true;
         }
     }
@@ -755,14 +776,118 @@ void GameEngine::issueOrdersPhase(vector<Player*>& players , Map* map) {
                 //Will need more specific implementation for computer players
                 switch (player->getPlayerStrategy()->getType()) {
                     case StrategyType::Aggressive: {
-                        //logic
+                        //Pick territories
+                        Territory* source = nullptr;
+                        Territory* target = nullptr;
+                        Player* targetPlayer = nullptr;
+
+                        //First deploy all armies to the strongest country
+                        int availableA = player->getNumFreeArmies();
+                        //returns strongest territory owned
+                        source = player->toDefend(this->map->getTerritories()).front();
+
+                        if (availableA != 0 && availableA > 0)
+                        {
+                            player->issueOrder(*this->deck, 1, source, availableA, target, *targetPlayer, observer_);
+                        }
+
+                        cout << "Order issued successfully!" << endl;
+
+                        //Second we advance all our armies from other territories to strongest territory (front of toDefend vector)
+                        for (Territory* t : player->getTerritories())
+                        {
+                            if (!(*t == *player->toDefend(this->map->getTerritories()).front()))
+                            {
+                                if (t->getNumOfArmies() != 0 && t->getNumOfArmies()>0)
+                                {
+                                    player->issueOrder(*this->deck, 2, t, t->getNumOfArmies(),
+                                                       player->toDefend(this->map->getTerritories()).front(),
+                                                       *targetPlayer, this->observer_);
+                                }
+                            }
+                        }
+                        //Third move all armies in strongest country owned to weakest enemy territory
+                        if(player->toAttack(this->map->getTerritories()).size() > 0&& player->toDefend(this->map->getTerritories()).size() > 0){
+                            source = player->toDefend(this->map->getTerritories()).front();
+                            target = player->toAttack(this->map->getTerritories()).front();
+                            availableA = source->getNumOfArmies();
+
+                            if (availableA != 0 && availableA > 0)
+                            {
+                                player->issueOrder(*this->deck, 2, source, availableA, target, *targetPlayer,
+                                                   observer_);
+                            }
+                        }
+                        int bombCounter=1;
+                        for (Card* card: player->getHand()->getCards())
+                        {
+                            if (card->getName()=="Bomb" && player->toAttack(this->map->getTerritories()).size()>bombCounter)
+                            {
+                                target=player->toAttack(this->map->getTerritories())[bombCounter];
+                                player->issueOrder(*this->deck,3,target,0,nullptr,*targetPlayer, observer_);
+                                bombCounter++;
+                            }
+                        }
                         cout << "Aggressive Player acted." << endl;
                         //flow statement to stop the computer from doing nothing if nothing else is left to do
                         playerDone[i] = true;
                         break;
                     }
                     case StrategyType::Benevolent: {
-                        //logic
+                        //Pick territories
+                        Territory* source = nullptr;
+                        Territory* target = nullptr;
+                        Player* targetPlayer = nullptr;
+                        //get list of territories ordered from weakest to strongest
+                        vector<Territory*> defendList = player->toDefend(this->map->getTerritories());
+                        if (defendList.empty()) return;
+                        //deploy all armies to the weakest country
+                        source = defendList.front();
+                        int availableA = player->getNumFreeArmies();
+                        //toDefend() for BenevolentPlayer returns weakest- strongest, so front() is the weakest
+                        player->issueOrder(*this->deck, 1, source, availableA, target, *targetPlayer, observer_);
+                        cout << "Deployed " << availableA << " armies to " << source->getName() << endl;
+                        //advance all our armies from other territories to the weakest territory
+                        for (Territory* t : player->getTerritories())
+                        {
+                            if (!(*t == *source) && t->getNumOfArmies() > 1)
+                            {
+                                int moveArmies = t->getNumOfArmies() / 2; //move half of armies
+                                player->issueOrder(*this->deck, 2, t, moveArmies, source, *player, observer_);
+                                cout << "Moved " << moveArmies << " armies from " << t->getName() << " to " << source->
+                                    getName() << endl;
+                            }
+                        }
+
+                        //making sure not just the weakest but also the second weakest territory is protected
+                        if (defendList.size() > 1)
+                        {
+                            Territory* secondWeakest = defendList[1];
+                            if (secondWeakest->getNumOfArmies() == 0)
+                            //checking if the second weakest territory has any armies
+                            {
+                                //finding the strongest terr to reinforce the 2nd weakest
+                                Territory* strongestTerr = nullptr;
+                                int maxArmies = -1;
+                                for (Territory* t : player->getTerritories())
+                                {
+                                    if (t != secondWeakest && t->getNumOfArmies() > maxArmies)
+                                    {
+                                        strongestTerr = t;
+                                        maxArmies = t->getNumOfArmies();
+                                    }
+                                }
+                                //move half the armies from strongest to 2nd weakest
+                                if (strongestTerr && maxArmies > 1)
+                                {
+                                    int moveArmies = maxArmies / 2;
+                                    player->issueOrder(*this->deck, 2, strongestTerr, moveArmies, secondWeakest,
+                                                       *player, observer_);
+                                    cout << "Moved " << moveArmies << " armies from " << strongestTerr->getName()
+                                        << " to reinforce " << secondWeakest->getName() << endl;
+                                }
+                            }
+                        }
                         cout << "Benevolent Player acted." << endl;
                         //flow statement to stop the computer from doing nothing if nothing else is left to do
                         playerDone[i] = true;
@@ -777,9 +902,9 @@ void GameEngine::issueOrdersPhase(vector<Player*>& players , Map* map) {
                         break;
                     }
                     case StrategyType::Cheater: {
-
-                        player->toAttack(map->getTerritories());
-
+                        //
+                        // player->toAttack(map->getTerritories());
+                        //
                         cout << "\n" << player->getName() << " territories to defend: " << endl;
                         for (auto* t : player->toDefend(map->getTerritories())) cout << "  - " << t->getName() << endl;
                         playerDone[i] = true;
@@ -886,7 +1011,7 @@ void GameEngine::issueOrdersPhase(vector<Player*>& players , Map* map) {
             }
 
             //creation of the order
-            player->issueOrder(*deck,choice, source, armies, target, *targetPlayer, observer_);
+            //player->issueOrder(*deck,choice, source, armies, target, *targetPlayer, observer_);
             cout << "Order issued successfully!" << endl;
 
             allDone = false; // player can make another action after this current one + turn order wait
@@ -923,13 +1048,20 @@ bool GameEngine::executeOrdersPhase() {
     //removes eliminated players
     std::vector<Player*> eliminated;
     for (auto* player : players) {
-
+        if (player->getPlayerStrategy()->getType() == StrategyType::Cheater)
+        {
+            player->toAttack(map->getTerritories());
+        }
         //Checked every turn if a neutral player has been attacked or not.
         if (player->getPlayerStrategy()->getType() == StrategyType::Neutral) {
             if (auto* neutral = dynamic_cast<NeutralPlayerStrategy*>(player->getPlayerStrategy())) {
                 neutral->attacked();
             }
         }
+    }
+
+
+    for (auto* player : players) {
         if (player->getName() == "Neutral Player") {
             continue;
         }
@@ -991,14 +1123,14 @@ bool GameEngine::checkWinCondition(const std::vector<Player*>& players, Map* map
         // Win condition: owns all territories
         if (ownedCount == totalTerritories) {
             cout << "Player " << player->getName() << " controls the entire map!" << endl;
-            winnerList[mapCounter].push_back(player->getName());
+            winnerList[mapCounter].emplace_back(player->getName());
             state = "win";
             return true;
         }
     }
     if (players.size() == 1) {
         cout << "Player " << players[0]->getName() << " is the only player left!" << endl;
-        winnerList[mapCounter].push_back(players[0]->getName());
+        winnerList[mapCounter].emplace_back(players[0]->getName());
         state = "win";
         return true;
     }
