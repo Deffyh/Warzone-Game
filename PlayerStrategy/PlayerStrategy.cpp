@@ -302,7 +302,6 @@ vector<Territory*> AggressivePlayerStrategy::toAttack(const std::vector<Territor
         }
     }
 
-    cout<<"/////////////////////////////////////////////////////"<<endl<<"SIZE OF TOATTACK"<<endl<<list.size()<<endl<<"////////////////////////////////////////////////"<<endl<<endl;
     return list;
 }
 

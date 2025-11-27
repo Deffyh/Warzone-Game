@@ -1,6 +1,7 @@
-loadmap worldMap
+loadmap Antarctica.map
 validatemap
-addplayer Alyssa
-addplayer Rob
+addplayer malak
+addplayer negin
+addplayer howard
 gamestart
 quit

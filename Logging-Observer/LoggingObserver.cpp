@@ -139,13 +139,15 @@ void logWinners(std::vector<std::vector<std::string>> &winnerList, int numberOfG
         out << "Map " << m + 1 << "\t\t\t\t\t\t\t";
 
         for (int g = 0; g < numberOfGames; g++) {
-            if (g < winnerList.size() && m < winnerList[g].size()) {
-                out << winnerList[g][m] << "\t\t\t\t\t\t\t";
-            }
+            // if (g < winnerList.size() && m < winnerList[g].size()) {
+            //     out << winnerList[m][g] << "!\t\t\t\t\t\t\t";
+
+            // }
+            out << winnerList[m][g] << "\t\t\t\t\t\t\t";
         }
 
         out << "\n";
     }
 
-    out << " LINE REACHED \n";  // extra line break
+    out << "LINE REACHED \n";  // extra line break
 };

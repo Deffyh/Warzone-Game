@@ -133,7 +133,8 @@ void GameEngine::runTournament() {
         for (int i = 0; i < getNumGames(); i++) {
             //set map
             counter = 0;
-            this->map = new Map(mapLoader.loadMap(getMapsToUse()[n]));
+            string mapToPlay = "./part1-map/mapFiles/" + getMapsToUse()[n];
+            this->map = new Map(mapLoader.loadMap(mapToPlay));
             //debug purpose
             cout << endl;
             cout << "New Tournament game has begun!" << endl;
@@ -242,7 +243,7 @@ void GameEngine::runTournament() {
         }
         mapCounter++;
     }
-   logWinners(winnerList, numGames, getMapsToUse().size());
+    logWinners(winnerList, numGames, getMapsToUse().size());
 }
 
 void GameEngine::startupPhase()
@@ -1077,16 +1078,6 @@ bool GameEngine::executeOrdersPhase() {
     cout << endl;
 
     if (checkWinCondition(players, map)) {
-        return true;
-    }
-
-
-    int exitCode = 0;
-    //for testing and faster exits
-    cout << "If you want to exit the game loop, enter 1. To continue, enter 0: ";
-    cin >> exitCode;
-    if (exitCode == 1) {
-        state = "win";
         return true;
     }
 
