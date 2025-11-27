@@ -59,8 +59,9 @@ class FileCommandProcessorAdapter: public CommandProcessor{
 private:
     ifstream file; 
     string fileN; 
-    
+
 public:
+    static GameEngine* engine;
     explicit FileCommandProcessorAdapter(Observer* observer,const string& filename);
     FileCommandProcessorAdapter(const FileCommandProcessorAdapter& other);
     ~FileCommandProcessorAdapter() override;

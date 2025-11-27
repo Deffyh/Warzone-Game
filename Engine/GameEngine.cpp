@@ -371,23 +371,7 @@ void GameEngine::startupPhase()
                         }
 
                         for (Player* player : this->players){
-                        //     //assign the correct number of territories per player
-                        //     for (int i = 0 ;i<territoryPerPlayer;i++)
-                        //     {
-                        //         unowned=true;
-                        //
-                        //         //choose random number corresponds to index to territory
-                        //         //continue to randomize the territory until an unowned territory is found
-                        //         while (unowned){
-                        //             randomIndex= rand() % numTerr;
-                        //             if (map->getTerritories()[randomIndex]->getOwner()==nullptr)
-                        //             {
-                        //                 map->getTerritories()[randomIndex]->setOwner(player);
-                        //                 player->addTerritory(map->getTerritories()[randomIndex]);
-                        //                 unowned=false;
-                        //             }
-                        //         }
-                        //     }
+                        //assign the correct number of territories per player
                             //give every player 50 army unit
                             player->addNumArmies(50);
                             //make the player draw a card twice
@@ -397,11 +381,6 @@ void GameEngine::startupPhase()
                         }
 
                         cout<<"All players have now each received 50 units of armies, 2 cards and "<<territoryPerPlayer<<" territories!"<<endl;
-
-                        //PART TO ADD WHEN MERGING WITH SHAWN'S PART, PART4 ITERATION 2
-                         //adding the neutral player
-                         //OrdersBlockade::neutralPlayer=this->players.back();
-                        //this->addPlayer(Player("Neutral Player"));
 
                         mainGameLoop();
                     }
@@ -442,6 +421,7 @@ void GameEngine::startupPhase()
                 string filename;
                 cin >> filename;
                 auto* textFile = new FileCommandProcessorAdapter(this->observer_, filename);
+                CommandProcessor::engine = this;
                 Command* command;
                 string input;
                 while (!gameOver)
@@ -554,23 +534,6 @@ void GameEngine::startupPhase()
 
                         for (Player* player : this->players){
 
-                            //     //assign the correct number of territories per player
-                            //     for (int i = 0 ;i<territoryPerPlayer;i++)
-                            //     {
-                            //         unowned=true;
-                            //
-                            //         //choose random number corresponds to index to territory
-                            //         //continue to randomize the territory until an unowned territory is found
-                            //         while (unowned){
-                            //             randomIndex= rand() % numTerr;
-                            //             if (map->getTerritories()[randomIndex]->getOwner()==nullptr)
-                            //             {
-                            //                 map->getTerritories()[randomIndex]->setOwner(player);
-                            //                 player->addTerritory(map->getTerritories()[randomIndex]);
-                            //                 unowned=false;
-                            //             }
-                            //         }
-                            //     }
                             //give every player 50 army unit
                             player->addNumArmies(50);
                             //make the player draw a card twice
@@ -580,24 +543,6 @@ void GameEngine::startupPhase()
                         }
 
                         cout<<"\nAll players have now each received 50 units of armies, 2 cards and "<<territoryPerPlayer<<" territories!"<<endl<<endl;
-
-                        //PART TO ADD WHEN MERGING WITH SHAWN'S PART, PART4 ITERATION 2
-                         //adding the neutral player
-                         //OrdersBlockade::neutralPlayer=this->players.back();
-
-                         //if there are leftover territories then they are given to the neutral player
-                        //this->addPlayer(Player("Neutral Player"));
-                         // if (terrLeft != 0)
-                         // {
-                         //     for (Territory* territory : this->map->getTerritories())
-                         //     {
-                         //         if (territory->getOwner() == nullptr)
-                         //         {
-                         //             //setting the owner as the last player added to the vector (neutral player)
-                         //             territory->setOwner(this->players.back());
-                         //         }
-                         //     }
-                         // }
 
                         mainGameLoop();
                     }
@@ -616,6 +561,12 @@ void GameEngine::startupPhase()
                             delete textFile;
                             break;
                         }
+                    }else if (input == "tournament" && state == "start"){
+                        cout << "START TOURNAMENT" << endl;
+
+                        runTournament();
+                        // Enter tournament logic or tournament function call here
+
                     }
 
                 }
