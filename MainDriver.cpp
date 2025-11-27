@@ -12,16 +12,16 @@ extern void testGameStates();
 extern void testMainGameLoop();
 extern void testLoggingObserver();
 extern void testTournament();
-
+extern void testPlayerStrategies();
 
 int main(){
     //testCommandProcessor();
-    testGameStates();
+    //testGameStates();
     //testMainGameLoop();
     //testOrderExecution();
     //testLoggingObserver();
-    //testTournament();
-
+    testPlayerStrategies();
+    testTournament();
 
     return 0;
 }
