@@ -133,7 +133,7 @@ void GameEngine::runTournament() {
         for (int i = 0; i < getNumGames(); i++) {
             //set map
             counter = 0;
-            string mapToPlay = "./part1-map/mapFiles/" + getMapsToUse()[n];
+            string mapToPlay = "../part1-map/mapFiles/" + getMapsToUse()[n]; //Change depending on IDE (. or ..)
             this->map = new Map(mapLoader.loadMap(mapToPlay));
             //debug purpose
             cout << endl;
