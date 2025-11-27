@@ -20,7 +20,7 @@ int main(){
     //testMainGameLoop();
     //testOrderExecution();
     //testLoggingObserver();
-    testPlayerStrategies();
+    //testPlayerStrategies();
     testTournament();
 
     return 0;
