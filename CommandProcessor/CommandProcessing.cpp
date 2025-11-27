@@ -276,7 +276,7 @@ bool CommandProcessor::validateTournamentParameters(const string& cmd){
     size_t nextSpacePos = std::string::npos;
     size_t secondNextSpacePos = std::string::npos;
     string parameters;
-    string pathToMapFiles = "../part1-map/mapFiles"; //Change depending on IDE (. or ..)
+    string pathToMapFiles = "../part1-map/mapFiles"; //Change the number of dots depending on IDE (. or ..)
     std::vector<std::string> AvailableMapFiles;
     std::vector<std::string> AvailableStrategies = {"Aggressive", "Benevolent", "Neutral", "Cheater"};
     std::vector<std::string> MapsToUse;
