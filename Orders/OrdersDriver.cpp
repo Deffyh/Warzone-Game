@@ -46,14 +46,14 @@ void testOrderExecution(){
     Territory* Ontario = new Territory(name3, c1, 5, 6, adjOntario);
     Territory* Quebec = new Territory(name4, c1, 7 ,8, adjQuebec);
 
-    Player* p1 = new Player("Shawn",observer);
+    Player* p1 = new Player("Shawn",observer, StrategyType::Neutral);
     p1->addTerritory(Saskatchewan);
 
-    Player* p2 = new Player("Howard",observer);
+    Player* p2 = new Player("Howard",observer,StrategyType::Neutral);
     p2->addTerritory(Quebec);
 
     // Define and initialize the neutral player (to be done in game engine)
-    Player* neutralPlayer = new Player("neutral",observer);
+    Player* neutralPlayer = new Player("neutral",observer, StrategyType::Neutral);
     OrdersBlockade::neutralPlayer = neutralPlayer;
     neutralPlayer->addTerritory(Manitoba);
     neutralPlayer->addTerritory(Ontario);

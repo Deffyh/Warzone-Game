@@ -7,6 +7,7 @@
 #include "Orders.h"
 #include "../Player/Player.h"
 #include "../part1-map/Map.h"
+#include "../PlayerStrategy/PlayerStrategy.h"
 using namespace std;
 
 // For now the neutral player 
@@ -252,6 +253,13 @@ void OrdersAdvance::execute(){
         delete o;
         return;
     }
+
+    if (targetTerritory->getOwner()->getPlayerStrategy()->getType() == StrategyType::Neutral) {
+        if (auto* neutral = dynamic_cast<NeutralPlayerStrategy*>(targetTerritory->getOwner()->getPlayerStrategy())) {
+            neutral->setAttacked();
+        }
+    }
+
     // We are advancing armies from one of our territories to another one of our territories
     int currentNumArmiesSource = this->getSourceTerritory()->getNumOfArmies();
     int currentNumArmiesTarget = this->getTargetTerritory()->getNumOfArmies();
@@ -346,6 +354,14 @@ void OrdersBomb::execute(){
         delete o;
         return;
     }
+
+    if (this->getSourceTerritory()->getOwner()->getPlayerStrategy()->getType() == StrategyType::Neutral) {
+        if (auto* neutral = dynamic_cast<NeutralPlayerStrategy*>(this->getSourceTerritory()->getOwner()->getPlayerStrategy())) {
+            neutral->setAttacked();
+        }
+    }
+
+
     int numArmiesBeforeBomb = this->getSourceTerritory()->getNumOfArmies();
     this->getSourceTerritory()->setNumOfArmies(numArmiesBeforeBomb / 2);
 
@@ -457,6 +473,7 @@ void OrdersAirlift::execute(){
         delete o;
         return;
     }
+
     int sourceNumArmies = this->getSourceTerritory()->getNumOfArmies();
     int targetNumArmies = this->getTargetTerritory()->getNumOfArmies();
 

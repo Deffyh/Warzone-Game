@@ -33,7 +33,7 @@ void  testLoggingObserver()
     Territory* Ontario = new Territory(name3, c1, 5, 6, adjOntario);
     Territory* Quebec = new Territory(name4, c1, 7 ,8, adjQuebec);
 
-    Player* p1 = new Player("Shawn", logObserver);
+    Player* p1 = new Player("Shawn", logObserver, StrategyType::Neutral);
     p1->addTerritory(Saskatchewan);
 
 

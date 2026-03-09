@@ -21,6 +21,7 @@ class ILoggable{
         //pure virtual function so that all derived classes will implement their own version
         virtual string stringToLog() =0;
 
+
         //all default because this is an abstract class
         virtual ~ILoggable()=default;
         ILoggable()=default;
@@ -76,6 +77,7 @@ protected:
     friend ostream& operator<<(ostream& out, const Subject& subject);
 };
 
+void logWinners(std::vector<std::vector<std::string>> &winnerList, int numberOfGames, int numberOfMaps);
 
 
 
