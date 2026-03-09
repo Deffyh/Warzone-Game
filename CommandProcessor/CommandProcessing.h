@@ -34,7 +34,6 @@ class CommandProcessor: public Subject, public ILoggable{
     protected:
         vector<Command*> commands;
     public:
-        static GameEngine* engine;
         explicit CommandProcessor(Observer* observer);
         CommandProcessor(const CommandProcessor& other);
         CommandProcessor& operator=(const CommandProcessor& other);
@@ -44,9 +43,6 @@ class CommandProcessor: public Subject, public ILoggable{
         virtual Command* saveCommand(string cm);  //saving the command in the vector
         virtual Command* getCommand(string state); //getting the last command
         virtual bool validate(Command* cm, string state);
-        bool validateTournamentParameters(const string& cmd);
-        void printTournmanetHelpCmd();
-        string returnTournamentParameters(const string& cmd, size_t nextDashPos);
         vector<Command*> getCommandList() const; //getter for commands vector
         //stream insertion operator
         friend ostream& operator<<(ostream& os, const CommandProcessor& cp);

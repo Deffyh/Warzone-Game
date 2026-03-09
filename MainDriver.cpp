@@ -11,7 +11,6 @@ extern void testOrderExecution();
 extern void testGameStates();
 extern void testMainGameLoop();
 extern void testLoggingObserver();
-extern void testTournament();
 
 
 int main(){
@@ -20,7 +19,6 @@ int main(){
     //testMainGameLoop();
     //testOrderExecution();
     //testLoggingObserver();
-    //testTournament();
 
 
     return 0;

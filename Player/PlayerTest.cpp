@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <unordered_set>
 
-#include "../PlayerStrategy/PlayerStrategy.h"
-
 using namespace std;
 
 
@@ -24,33 +22,10 @@ Player::Player(const std:: string& playerName): name(playerName),numArmies(0),nu
 
 }
 //cons with name
-Player::Player(const std:: string& playerName,Observer* obs, StrategyType type): name(playerName),numArmies(0),numFreeArmies(0), truceList() {
+Player::Player(const std:: string& playerName,Observer* obs): name(playerName),numArmies(0),numFreeArmies(0), truceList() {
     hand= new Hand(playerName);
     orderList=new OrdersList(obs);
     territories= vector<Territory*>();
-
-    switch (type) {
-        case StrategyType::Human: {
-            ps = new HumanPlayerStrategy(this);
-            break;
-        }
-        case StrategyType::Aggressive: {
-            ps = new AggressivePlayerStrategy(this);
-            break;
-        }
-        case StrategyType::Benevolent: {
-            ps = new BenevolentPlayerStrategy(this);
-            break;
-        }
-        case StrategyType::Neutral: {
-            ps = new NeutralPlayerStrategy(this);
-            break;
-        }
-        case StrategyType::Cheater: {
-            ps = new CheaterPlayerStrategy(this);
-            break;
-        }
-    }
 }
 
 Player::Player(const Player& other)
@@ -74,28 +49,6 @@ Player::Player(const Player& other)
     orderList = new OrdersList(*other.orderList);
 
 
-    switch (other.ps->getType()) {
-        case StrategyType::Human: {
-            ps = new HumanPlayerStrategy(this);
-            break;
-        }
-        case StrategyType::Aggressive: {
-            ps = new AggressivePlayerStrategy(this);
-            break;
-        }
-        case StrategyType::Benevolent: {
-            ps = new BenevolentPlayerStrategy(this);
-            break;
-        }
-        case StrategyType::Neutral: {
-            ps = new NeutralPlayerStrategy(this);
-            break;
-        }
-        case StrategyType::Cheater: {
-            ps = new CheaterPlayerStrategy(this);
-            break;
-        }
-    }
 }
 
 //asignment operator
@@ -230,21 +183,87 @@ void Player::addOrder(Orders* ord) {
 }
 
 void Player::issueOrder(Deck& deck, int mode, Territory* sourceTerritory, int numArmies, Territory* targetTerritory, Player& player2,Observer* obs) {
-
-    this->ps->issueOrder(deck, mode, sourceTerritory, numArmies, targetTerritory, player2, obs);
+    switch (mode) {
+        case 1:
+            this->getOrderList()->add(new OrdersDeploy(this, sourceTerritory, numArmies, obs));
+            this->removeNumFreeArmies(numArmies);
+            break;
+        case 2:
+            this->getOrderList()->add(new OrdersAdvance(this, sourceTerritory, targetTerritory, numArmies, obs));
+            this->removeNumFreeArmies(numArmies);
+            break;
+        case 3:
+        case 4:
+        case 5:
+        case 6: {
+            Card* matchingCard = nullptr;
+            for (Card* card: this->getHand()->getCards()) {
+                if ((mode == 3 && card->getName() == "Bomb") ||
+                    (mode == 4 && card->getName() == "Blockade") ||
+                    (mode == 5 && card->getName() == "Airlift") ||
+                    (mode == 6 && (card->getName() == "Diplomacy" || card->getName() == "Negotiate"))) {
+                    matchingCard = card;
+                    break;
+                }
+            }
+            if (!matchingCard) {
+                cout << this->getName() << " doesn't have the card required for this order." << endl;
+                return;
+            }
+            OrdersList* olist = this->getOrderList();
+            matchingCard->play(deck, this->getHand(), *olist, this, sourceTerritory, mode, numArmies, targetTerritory, &player2, obs);
+            cout << this->getName() << " played a " << matchingCard->getName() << " card." << endl;
+            this->removeNumFreeArmies(numArmies);
+            break;
+        }
+        default:
+            cout << "Invalid order mode." << endl;
+            break;
+    }
 }
 
 //returns a list of territories the player owns(to defend)
 vector<Territory*> Player::toDefend(const std::vector<Territory*>& allTerritories) const{                                                                            //Require changes to work as intended
-    return this->ps->toDefend(allTerritories);
+    return this->territories;
 
 
 }
 
 //returns list of territories adjacent to player's territories but owned by other player(to attack)
 vector<Territory*> Player::toAttack(const std::vector<Territory*>& allTerritories) const {                              //Require changes to work as intended
+    std::vector<Territory*> attackList;
+    std::unordered_set<Territory*> ownedPtrs;
+    std::unordered_set<std::string> ownedNames;
 
-    return this->ps->toAttack(allTerritories);
+    for (Territory* t : this->territories) {
+        if (t) {
+            ownedPtrs.insert(t);
+            ownedNames.insert(t->getName());
+        }
+    }
+
+    for (Territory* myT : this->territories) {
+        if (!myT) continue;
+
+        for (const std::string& adjName : myT->getAdjTerritoriesNames()) {
+            auto it = std::find_if(allTerritories.begin(), allTerritories.end(),
+                [&](Territory* cand) { return cand && cand->getName() == adjName; });
+            if (it == allTerritories.end()) continue;
+
+            Territory* target = *it;
+            if (!target) continue;
+            if (ownedPtrs.count(target) || ownedNames.count(target->getName())) continue;
+
+            if (std::find(attackList.begin(), attackList.end(), target) == attackList.end()) {
+                attackList.push_back(target);
+            }
+        }
+    }
+
+    std::sort(attackList.begin(), attackList.end(),
+        [](Territory* a, Territory* b) { return a->getNumOfArmies() < b->getNumOfArmies(); });
+
+    return attackList;
 }
 
  //print the status of the player
@@ -340,16 +359,6 @@ Hand* Player::getHand() {
 }
 
 //===========================================
-
-void Player::setPlayerStrategy(PlayerStrategy* ps) {
-    if (this->ps) {
-        delete this->ps;
-    }
-    this->ps = ps;
-}
-PlayerStrategy* Player::getPlayerStrategy() {
-    return ps;
-}
 
 
 

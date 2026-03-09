@@ -5,7 +5,6 @@
 #include <vector>
 #include <iostream>
 #include "../Part-4-Deck/Cards.h"
-#include "../PlayerStrategy/PlayerStrategy.h"
 
 
 // Forward declarations
@@ -15,8 +14,6 @@ class Orders;
 class OrdersList;
 class Deck;
 class Hand;
-class PlayerStrategy;
-enum class StrategyType;
 
 using namespace std;
 
@@ -35,16 +32,11 @@ class Player {
     int numArmies; //Total of army units
     int numFreeArmies; //Number of free army units to deploy
 
-    //=========
-    PlayerStrategy* ps;
-
-
-
 public:
    Player();
    Player(const std::string& playerName);
     Player(Observer* obs);
-    Player(const std::string& playerName, Observer* obs, StrategyType type);
+    Player(const std::string& playerName, Observer* obs);
     Player(const Player& other); //copy constructor
    Player& operator =(const Player& other); //assignment operator
    ~Player(); //destructor, clears up resources when a player obj is destroyed
@@ -80,14 +72,6 @@ public:
 
   Territory* findTerritoryByName(const string& name);
     Hand* getHand();
-
-    //part 3
-    void setPlayerStrategy(PlayerStrategy* ps);
-    PlayerStrategy* getPlayerStrategy();
-    void isAttacked();
-    void setAttacked(bool newAttacked);
-
-    bool getAttacked();
 
 };
 
